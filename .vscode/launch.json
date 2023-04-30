@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node-terminal",
+            "name": "Run Gateway",
+            "request": "launch",
+            "command": "npm run start",
+            "cwd": "${workspaceFolder}/gateway"
+        },
+        {
+            "type": "node-terminal",
+            "name": "Run Products",
+            "request": "launch",
+            "command": "npm run start",
+            "cwd": "${workspaceFolder}/products"
+        },
+        {
+            "type": "node-terminal",
+            "name": "Run Shopping",
+            "request": "launch",
+            "command": "npm run start",
+            "cwd": "${workspaceFolder}/shopping"
+        },
+        {
+            "type": "node-terminal",
+            "name": "Run Customer",
+            "request": "launch",
+            "command": "npm run start",
+            "cwd": "${workspaceFolder}/customer"
+        }
+    ]
+}
