@@ -1,5 +1,5 @@
 module.exports = {
     OrderModel: require('./Order'),
-    CardModel: require('./Cart')
+    CartModel: require('./Cart')
 
 }
