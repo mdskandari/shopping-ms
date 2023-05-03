@@ -1,6 +1,10 @@
 const { ShoppingRepository } = require("../database");
 const { FormateData } = require("../utils");
-
+const {
+  APIError,
+  STATUS_CODES,
+  BadRequestError,
+} = require("../utils/app-errors");
 // All Business logic will be here
 class ShoppingService {
   constructor() {
@@ -9,7 +13,7 @@ class ShoppingService {
 
   async GetCart( _id) {
     try {
-      const cartItems = this.repository.Cart(_id);
+      const cartItems = await this.repository.Cart(_id);
       return FormateData(cartItems);
     } catch (error) {
       throw error;
@@ -69,16 +73,16 @@ class ShoppingService {
     }
   }
 
-  async GetOrderPayload(userId, order, event) {
+  GetOrderPayload(userId, order, event) {
     if (order) {
-      const payload = {
+      return {
         event,
         data: {
           userId,
           order,
         },
       };
-      return FormateData(payload);
+      
     } else {
       return FormateData({
         error: "No Order available",

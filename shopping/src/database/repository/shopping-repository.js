@@ -12,9 +12,7 @@ class ShoppingRepository {
 
   async Orders(customerId) {
     try {
-      const orders = await OrderModel.find({ customerId }).populate(
-        "items.product"
-      );
+      const orders = await OrderModel.find({ customerId })
       return orders;
     } catch (err) {
       throw APIError(
@@ -63,8 +61,10 @@ class ShoppingRepository {
             cartItems.push({ product: { ...item }, unit: qty });
           }
           cart.items = cartItems;
-          return await cart.save();
+        } else {
+          cart.items.push({ product: { ...item }, unit: qty });
         }
+        return await cart.save();
       } else {
         return await CartModel.create({
           customerId,
