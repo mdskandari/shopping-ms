@@ -4,7 +4,7 @@ const { products,appEventListenter } = require('./api');
 const HandleErrors = require('./utils/error-handler')
 
 
-module.exports = async (app) => {
+module.exports = async (app, channel) => {
 
     app.use(express.json({ limit: '1mb'}));
     app.use(express.urlencoded({ extended: true, limit: '1mb'}));
@@ -12,9 +12,10 @@ module.exports = async (app) => {
     app.use(express.static(__dirname + '/public'))
 
     //liten for app
-    appEventListenter(app);
+    // appEventListenter(app);
+
     //api
-    products(app);
+    products(app, channel);
 
     // error handling
     app.use(HandleErrors);

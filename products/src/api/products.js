@@ -1,8 +1,10 @@
 const ProductService = require("../services/product-service");
-const { PublishCustomerEvent, PublishShoppingEvent } = require("../utils");
+const { PublishMessage } = require("../utils");
 const UserAuth = require("./middlewares/auth");
+const { SHOPPING_BINDING_KEY, CUSTOMER_BINDING_KEY } = require("../config");
+const { json } = require("express");
 
-module.exports = (app) => {
+module.exports = (app, channel) => {
   const service = new ProductService();
 
   app.post("/product/create", async (req, res, next) => {
@@ -68,7 +70,10 @@ module.exports = (app) => {
         "ADD_TO_WISHLIST"
       );
 
-      await PublishCustomerEvent(data);
+      // await PublishCustomerEvent(data);
+
+      await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+
       return res.status(200).json(data.data.product);
     } catch (err) {}
   });
@@ -83,7 +88,8 @@ module.exports = (app) => {
         { productId },
         "REMOVE_FROM_WISHLIST"
       );
-      await PublishCustomerEvent(data);
+      // await PublishCustomerEvent(data);
+      await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
       return res.status(200).json(data.data.product);
     } catch (err) {
       next(err);
@@ -100,15 +106,17 @@ module.exports = (app) => {
         "ADD_TO_CART"
       );
 
-      await PublishCustomerEvent(data);
-      await PublishShoppingEvent(data);
+      // await PublishCustomerEvent(data);
+      // await PublishShoppingEvent(data);
 
-      const  response = {
-        product : data.data.product,
-        unit: data.data.qty
-      }
+      await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+      await PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));
+
+      const response = {
+        product: data.data.product,
+        unit: data.data.qty,
+      };
       return res.status(200).json(response);
-
     } catch (err) {
       next(err);
     }
@@ -124,13 +132,16 @@ module.exports = (app) => {
         "REMOVE_FROM_CART"
       );
 
-      await PublishCustomerEvent(data);
-      await PublishShoppingEvent(data);
-      
-      const  response = {
-        product : data.data.product,
-        unit: data.data.qty
-      }
+      // await PublishCustomerEvent(data);
+      // await PublishShoppingEvent(data);
+
+      await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+      await PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));
+
+      const response = {
+        product: data.data.product,
+        unit: data.data.qty,
+      };
       return res.status(200).json(response);
     } catch (err) {
       next(err);
