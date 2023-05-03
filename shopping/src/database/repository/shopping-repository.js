@@ -1,11 +1,10 @@
-const {
-  CustomerModel,
-  ProductModel,
-  OrderModel,
-  CartModel,
-} = require("../models");
+const { OrderModel, CartModel } = require("../models");
 const { v4: uuidv4 } = require("uuid");
-const { APIError, BadRequestError } = require("../../utils/app-errors");
+const {
+  APIError,
+  STATUS_CODES,
+  BadRequestError,
+} = require("../../utils/app-errors");
 
 //Dealing with data base operations
 class ShoppingRepository {
@@ -33,7 +32,7 @@ class ShoppingRepository {
         return cartItems;
       }
 
-      throw new APIError("API Error", 404, "Data was not found");
+      throw new Error("Data was not found");
     } catch (error) {
       throw error;
     }
@@ -65,12 +64,12 @@ class ShoppingRepository {
           }
           cart.items = cartItems;
           return await cart.save();
-        } else {
-          return await CartModel.create({
-            customerId,
-            items: [{ product: { ...item }, unit: qty }],
-          });
         }
+      } else {
+        return await CartModel.create({
+          customerId,
+          items: [{ product: { ...item }, unit: qty }],
+        });
       }
 
       throw new Error("Unable to add to cart!");
@@ -87,7 +86,7 @@ class ShoppingRepository {
     //check transaction for payment Status
 
     try {
-      const cart = await CartModel.findOne({customerId});
+      const cart = await CartModel.findOne({ customerId });
 
       if (cart) {
         let amount = 0;
@@ -114,7 +113,6 @@ class ShoppingRepository {
           cart.items = [];
 
           const orderResult = await order.save();
-
 
           await cart.save();
 

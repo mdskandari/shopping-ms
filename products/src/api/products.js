@@ -84,8 +84,6 @@ module.exports = (app) => {
         "REMOVE_FROM_WISHLIST"
       );
       await PublishCustomerEvent(data);
-      
-
       return res.status(200).json(data.data.product);
     } catch (err) {
       next(err);
