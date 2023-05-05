@@ -5,28 +5,28 @@
             "type": "node-terminal",
             "name": "Run Gateway",
             "request": "launch",
-            "command": "npm run start",
+            "command": "npm run dev",
             "cwd": "${workspaceFolder}/gateway"
         },
         {
             "type": "node-terminal",
             "name": "Run Products",
             "request": "launch",
-            "command": "npm run start",
+            "command": "npm run dev",
             "cwd": "${workspaceFolder}/products"
         },
         {
             "type": "node-terminal",
             "name": "Run Shopping",
             "request": "launch",
-            "command": "npm run start",
+            "command": "npm run dev",
             "cwd": "${workspaceFolder}/shopping"
         },
         {
             "type": "node-terminal",
             "name": "Run Customer",
             "request": "launch",
-            "command": "npm run start",
+            "command": "npm run dev",
             "cwd": "${workspaceFolder}/customer"
         }
     ]

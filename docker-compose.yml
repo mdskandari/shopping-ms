@@ -84,16 +84,32 @@ services:
     networks:
       - shopping_net
 
+  # nginx-proxy:
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: ./proxy
+  #   depends_on:
+  #     - products
+  #     - shopping
+  #     - customer
+  #   ports:
+  #     - 8000:80
+  #   networks:
+  #     - shopping_net
+
   nginx-proxy:
-    build:
-      dockerfile: Dockerfile
-      context: ./proxy
+    image: 'nginx:1.23.4-alpine'
+    container_name: shopping_server
+    restart: always
+    ports:
+      - "8000:80"
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf
+      - ./proxy:/etc/nginx/conf.d
     depends_on:
       - products
-      - shopping
       - customer
-    ports:
-      - 8000:80
+      - shopping
     networks:
       - shopping_net
 

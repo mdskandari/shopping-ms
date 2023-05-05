@@ -1,9 +1,14 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-// const axios = require('axios');
 const amqplib = require("amqplib");
+const { v4: uuid4 } = require("uuid");
 
-const { APP_SECRET, MESSAGE_BROKER_URL, EXCHANGE_NAME,QUEUE_NAME } = require("../config");
+const {
+  APP_SECRET,
+  MESSAGE_BROKER_URL,
+  EXCHANGE_NAME,
+  QUEUE_NAME,
+} = require("../config");
 
 //Utility functions
 module.exports.GenerateSalt = async () => {
@@ -52,25 +57,21 @@ module.exports.FormateData = (data) => {
   }
 };
 
-// module.exports.PublishCustomerEvent =  async(payload) =>{
-//   axios.post('http://localhost:8000/customer/app-events',{
-//     payload
-//   })
-// }
-
-// module.exports.PublishShoppingEvent =  async(payload) =>{
-//   axios.post('http://localhost:8000/shopping/app-events',{
-//     payload
-//   })
-// }
-
 /* ============================ message broker stuff ============================== */
+
+let amqplibConnection = null;
+
+const getChannel = async () => {
+  if (amqplibConnection === null) {
+    amqplibConnection = await amqplib.connect(MESSAGE_BROKER_URL);
+  }
+  return await amqplibConnection.createChannel();
+};
 
 // 1. create channel
 module.exports.CreateChannel = async () => {
   try {
-    const connecttion = await amqplib.connect(MESSAGE_BROKER_URL);
-    const channel = await connecttion.createChannel();
+    const channel = await getChannel();
     await channel.assertExchange(EXCHANGE_NAME, "direct", false);
 
     return channel;
@@ -78,6 +79,9 @@ module.exports.CreateChannel = async () => {
     throw error;
   }
 };
+
+
+
 
 // 2. publish messages
 module.exports.PublishMessage = async (channel, binding_key, message) => {
@@ -98,8 +102,39 @@ module.exports.SubscribeMessage = async (channel, service, binding_key) => {
       console.log(data.content.toString());
       channel.ack(data);
     });
-
   } catch (error) {
     throw error;
   }
+};
+
+module.exports.RPCObserver = async (RPC_QUEUE_NAME, service) => {
+  const channel = await getChannel();
+  await channel.assertQueue(RPC_QUEUE_NAME, {
+    durable: false,
+  });
+  channel.prefetch(1);
+  console.log('[x] Awaiting RPC requests');
+  channel.consume(
+    RPC_QUEUE_NAME,
+    async (msg) => {
+      if (msg.content) {
+        
+        const payload = JSON.parse(msg.content.toString());
+        const response = await service.serveRPCRequest(payload);
+        console.log(`Payload received: ${msg.content}`);
+        
+        channel.sendToQueue(
+          msg.properties.replyTo,
+          Buffer.from(JSON.stringify(response)),
+          {
+            correlationId: msg.properties.correlationId,
+          }
+        );
+        channel.ack(msg);
+      }
+    },
+    {
+      noAck: false,
+    }
+  );
 };

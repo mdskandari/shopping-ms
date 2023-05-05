@@ -1,8 +1,15 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const amqplib = require('amqplib');
+const amqplib = require("amqplib");
+const { v4: uuid4 } = require("uuid");
 
-const { APP_SECRET,MESSAGE_BROKER_URL,QUEUE_NAME,EXCHANGE_NAME, SHOPPING_BINDING_KEY } = require("../config");
+const {
+  APP_SECRET,
+  MESSAGE_BROKER_URL,
+  QUEUE_NAME,
+  EXCHANGE_NAME,
+  SHOPPING_BINDING_KEY,
+} = require("../config");
 
 //Utility functions
 module.exports.GenerateSalt = async () => {
@@ -54,10 +61,19 @@ module.exports.FormateData = (data) => {
 /* ============================ message broker stuff ============================== */
 
 // 1. create channel
+let amqplibConnection = null;
+
+const getChannel = async () => {
+  if (amqplibConnection === null) {
+    amqplibConnection = await amqplib.connect(MESSAGE_BROKER_URL);
+  }
+  return await amqplibConnection.createChannel();
+};
+
+// 1. create channel
 module.exports.CreateChannel = async () => {
   try {
-    const connecttion = await amqplib.connect(MESSAGE_BROKER_URL);
-    const channel = await connecttion.createChannel();
+    const channel = await getChannel();
     await channel.assertExchange(EXCHANGE_NAME, "direct", false);
 
     return channel;
@@ -81,13 +97,57 @@ module.exports.SubscribeMessage = async (channel, service) => {
     const appQueue = await channel.assertQueue(QUEUE_NAME);
     channel.bindQueue(appQueue.queue, EXCHANGE_NAME, SHOPPING_BINDING_KEY);
     channel.consume(appQueue.queue, (data) => {
-      console.log("Received Data");
-      console.log(data.content.toString());
-      service.SubscribeEvents(data.content.toString())
+      console.log(`Subscribed Data: ${data.content.toString()}`);
+      service.SubscribeEvents(data.content.toString());
       channel.ack(data);
     });
-
   } catch (error) {
     throw error;
   }
+};
+
+requestData = async (RPC_QUEUE_NAME, requestPayload, uuid) => {
+  try {
+    const channel = await getChannel();
+
+    const q = await channel.assertQueue("", { exclusive: true });
+
+    channel.sendToQueue(
+      RPC_QUEUE_NAME,
+      Buffer.from(JSON.stringify(requestPayload)),
+      {
+        replyTo: q.queue,
+        correlationId: uuid,
+      }
+    );
+
+    return new Promise(async (resolve, reject) => {
+      // timeout n
+      const timeout = setTimeout(() => {
+        channel.close();
+        resolve("API could not fullfil the request!");
+      }, 8000);
+
+      await channel.consume(
+        q.queue,
+        (msg) => {
+          if (msg.properties.correlationId == uuid) {
+            resolve(JSON.parse(msg.content.toString()));
+            clearTimeout(timeout);
+          } else {
+            reject("data Not found!");
+          }
+        },
+        { noAck: true }
+      );
+    });
+  } catch (error) {
+    console.log(error);
+    return "error";
+  }
+};
+
+module.exports.RPCRequest = async (RPC_QUEUE_NAME, requestPayload) => {
+  const uuid = uuid4(); // correlationId
+  return await requestData(RPC_QUEUE_NAME, requestPayload, uuid);
 };

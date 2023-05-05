@@ -1,12 +1,12 @@
 const ProductService = require("../services/product-service");
-const { PublishMessage } = require("../utils");
+const { RPCObserver } = require("../utils");
 const UserAuth = require("./middlewares/auth");
 const { SHOPPING_BINDING_KEY, CUSTOMER_BINDING_KEY } = require("../config");
-const { json } = require("express");
 
 module.exports = (app, channel) => {
   const service = new ProductService();
-
+  RPCObserver("PRODUCT_RPC", service);
+  
   app.post("/product/create", async (req, res, next) => {
     try {
       const { name, desc, type, unit, price, available, suplier, banner } =
@@ -60,95 +60,97 @@ module.exports = (app, channel) => {
     }
   });
 
-  app.put("/wishlist", UserAuth, async (req, res, next) => {
-    const { _id } = req.user;
-    try {
-      // get payload and send to customer service
-      const { data } = await service.GetProductPayload(
-        _id,
-        { productId: req.body._id },
-        "ADD_TO_WISHLIST"
-      );
+  // app.put("/wishlist", UserAuth, async (req, res, next) => {
 
-      // await PublishCustomerEvent(data);
+  //   const { _id } = req.user;
+  //   try {
+  //     // get payload and send to customer service
+  //     const { data } = await service.GetProductPayload(
+  //       _id,
+  //       { productId: req.body._id },
+  //       "ADD_TO_WISHLIST"
+  //     );
 
-      await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+  //     // await PublishCustomerEvent(data);
 
-      return res.status(200).json(data.data.product);
-    } catch (err) {}
-  });
+  //     await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
 
-  app.delete("/wishlist/:id", UserAuth, async (req, res, next) => {
-    const { _id } = req.user;
-    const productId = req.params.id;
+  //     return res.status(200).json(data.data.product);
+  //   } catch (err) {}
+  // });
 
-    try {
-      const { data } = await service.GetProductPayload(
-        _id,
-        { productId },
-        "REMOVE_FROM_WISHLIST"
-      );
-      // await PublishCustomerEvent(data);
-      await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
-      return res.status(200).json(data.data.product);
-    } catch (err) {
-      next(err);
-    }
-  });
+  // app.delete("/wishlist/:id", UserAuth, async (req, res, next) => {
+  //   const { _id } = req.user;
+  //   const productId = req.params.id;
 
-  app.put("/cart", UserAuth, async (req, res, next) => {
-    const { _id } = req.user;
+  //   try {
+  //     const { data } = await service.GetProductPayload(
+  //       _id,
+  //       { productId },
+  //       "REMOVE_FROM_WISHLIST"
+  //     );
+  //     // await PublishCustomerEvent(data);
+  //     await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+  //     return res.status(200).json(data.data.product);
+  //   } catch (err) {
+  //     next(err);
+  //   }
+  // });
 
-    try {
-      const { data } = await service.GetProductPayload(
-        _id,
-        { productId: req.body._id, qty: req.body.qty },
-        "ADD_TO_CART"
-      );
+  // app.put("/cart", UserAuth, async (req, res, next) => {
+  //   const { _id } = req.user;
 
-      // await PublishCustomerEvent(data);
-      // await PublishShoppingEvent(data);
+  //   try {
+  //     const { data } = await service.GetProductPayload(
+  //       _id,
+  //       { productId: req.body._id, qty: req.body.qty },
+  //       "ADD_TO_CART"
+  //     );
 
-      await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
-      await PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));
+  //     // await PublishCustomerEvent(data);
+  //     // await PublishShoppingEvent(data);
 
-      const response = {
-        product: data.data.product,
-        unit: data.data.qty,
-      };
-      return res.status(200).json(response);
-    } catch (err) {
-      next(err);
-    }
-  });
+  //     await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+  //     await PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));
 
-  app.delete("/cart/:id", UserAuth, async (req, res, next) => {
-    const { _id } = req.user;
+  //     const response = {
+  //       product: data.data.product,
+  //       unit: data.data.qty,
+  //     };
+  //     return res.status(200).json(response);
+  //   } catch (err) {
+  //     next(err);
+  //   }
+  // });
 
-    try {
-      const { data } = await service.GetProductPayload(
-        _id,
-        { productId: req.params.id },
-        "REMOVE_FROM_CART"
-      );
+  // app.delete("/cart/:id", UserAuth, async (req, res, next) => {
+  //   const { _id } = req.user;
 
-      // await PublishCustomerEvent(data);
-      // await PublishShoppingEvent(data);
+  //   try {
+  //     const { data } = await service.GetProductPayload(
+  //       _id,
+  //       { productId: req.params.id },
+  //       "REMOVE_FROM_CART"
+  //     );
 
-      await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
-      await PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));
+  //     // await PublishCustomerEvent(data);
+  //     // await PublishShoppingEvent(data);
 
-      const response = {
-        product: data.data.product,
-        unit: data.data.qty,
-      };
-      return res.status(200).json(response);
-    } catch (err) {
-      next(err);
-    }
-  });
+  //     await PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+  //     await PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));
+
+  //     const response = {
+  //       product: data.data.product,
+  //       unit: data.data.qty,
+  //     };
+  //     return res.status(200).json(response);
+  //   } catch (err) {
+  //     next(err);
+  //   }
+  // });
 
   //get Top products and category
+
   app.get("/", async (req, res, next) => {
     //check validation
     try {

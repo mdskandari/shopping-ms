@@ -89,7 +89,23 @@ class ProductService {
         error: "No product available",
       });
     }
-    
+  }
+
+  // RPC Responses
+
+  async serveRPCRequest(payload) {
+    const { data, type } = payload;
+
+    switch (type) {
+      case "VIEW_PRODUCT":
+        return await this.repository.FindById(data);
+        break;
+      case "VIEW_PRODUCTS":
+        return await this.repository.FindSelectedProducts(data);
+        break;
+      default:
+        break;
+    }
   }
 }
 

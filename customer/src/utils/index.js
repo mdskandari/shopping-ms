@@ -68,13 +68,13 @@ module.exports.CreateChannel = async () => {
 
 // 2. publish messages
 // 2.1. In customer service we don't publish any event so we dont need this section
-// module.exports.PublishMessage = async (channel, binding_key, message) => {
-//   try {
-//     channel.publish(EXCHANGE_NAME, binding_key, Buffer.from(message));
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+module.exports.PublishMessage = async (channel, binding_key, message) => {
+  try {
+    channel.publish(EXCHANGE_NAME, binding_key, Buffer.from(message));
+  } catch (error) {
+    throw error;
+  }
+};
 
 // 3. subscribe messages
 module.exports.SubscribeMessage = async (channel, service) => {

@@ -95,92 +95,105 @@ class CustomerService {
     }
   }
 
-  async GetShopingDetails(id) {
+  async DeleteProfile(id) {
     try {
-      const existingCustomer = await this.repository.FindCustomerById({ id });
-
-      if (existingCustomer) {
-        return FormateData(existingCustomer);
-      }
-      return FormateData({ msg: "Error" });
+      const data = await this.repository.DeleteCustomerById(id);
+      const payload = {
+        event: "DELETE_PROFILE",
+        data: { userId: id },
+      };
+      return { data, payload };
     } catch (err) {
       throw new APIError("Data Not found", err);
     }
   }
 
-  async GetWishList(customerId) {
-    try {
-      const wishListItems = await this.repository.Wishlist(customerId);
-      return FormateData(wishListItems);
-    } catch (err) {
-      throw new APIError("Data Not found", err);
-    }
-  }
+  // async GetShopingDetails(id) {
+  //   try {
+  //     const existingCustomer = await this.repository.FindCustomerById({ id });
 
-  async AddToWishlist(customerId, product) {
-    try {
-      const wishlistResult = await this.repository.AddWishlistItem(
-        customerId,
-        product
-      );
-      return FormateData(wishlistResult);
-    } catch (err) {
-      throw new APIError("Data Not found", err);
-    }
-  }
+  //     if (existingCustomer) {
+  //       return FormateData(existingCustomer);
+  //     }
+  //     return FormateData({ msg: "Error" });
+  //   } catch (err) {
+  //     throw new APIError("Data Not found", err);
+  //   }
+  // }
 
-  async ManageCart(customerId, product, qty, isRemove) {
-    try {
-      const cartResult = await this.repository.AddCartItem(
-        customerId,
-        product,
-        qty,
-        isRemove
-      );
-      return FormateData(cartResult);
-    } catch (err) {
-      throw new APIError("Data Not found", err);
-    }
-  }
+  // async GetWishList(customerId) {
+  //   try {
+  //     const wishListItems = await this.repository.Wishlist(customerId);
+  //     return FormateData(wishListItems);
+  //   } catch (err) {
+  //     throw new APIError("Data Not found", err);
+  //   }
+  // }
 
-  async ManageOrder(customerId, order) {
-    try {
-      const orderResult = await this.repository.AddOrderToProfile(
-        customerId,
-        order
-      );
-      return FormateData(orderResult);
-    } catch (err) {
-      throw new APIError("Data Not found", err);
-    }
-  }
+  // async AddToWishlist(customerId, product) {
+  //   try {
+  //     const wishlistResult = await this.repository.AddWishlistItem(
+  //       customerId,
+  //       product
+  //     );
+  //     return FormateData(wishlistResult);
+  //   } catch (err) {
+  //     throw new APIError("Data Not found", err);
+  //   }
+  // }
 
-  async SubscribeEvents(payload) {
-    
-    payload = JSON.parse(payload);
-    
-    const { event, data } = payload;
+  // async ManageCart(customerId, product, qty, isRemove) {
+  //   try {
+  //     const cartResult = await this.repository.AddCartItem(
+  //       customerId,
+  //       product,
+  //       qty,
+  //       isRemove
+  //     );
+  //     return FormateData(cartResult);
+  //   } catch (err) {
+  //     throw new APIError("Data Not found", err);
+  //   }
+  // }
 
-    const { userId, product, order, qty } = data;
+  // async ManageOrder(customerId, order) {
+  //   try {
+  //     const orderResult = await this.repository.AddOrderToProfile(
+  //       customerId,
+  //       order
+  //     );
+  //     return FormateData(orderResult);
+  //   } catch (err) {
+  //     throw new APIError("Data Not found", err);
+  //   }
+  // }
 
-    switch (event) {
-      case "ADD_TO_WISHLIST":
-      case "REMOVE_FROM_WISHLIST":
-        this.AddToWishlist(userId, product);
-        break;
-      case "ADD_TO_CART":
-        this.ManageCart(userId, product, qty, false);
-        break;
-      case "REMOVE_FROM_CART":
-        this.ManageCart(userId, product, qty, true);
-        break;
-      case "CREATE_ORDER":
-        this.ManageOrder(userId, order);
-        break;
-      default:
-        break;
-    }
-  }
+  // async SubscribeEvents(payload) {
+
+  //   payload = JSON.parse(payload);
+
+  //   const { event, data } = payload;
+
+  //   const { userId, product, order, qty } = data;
+
+  //   switch (event) {
+  //     case "ADD_TO_WISHLIST":
+  //     case "REMOVE_FROM_WISHLIST":
+  //       this.AddToWishlist(userId, product);
+  //       break;
+  //     case "ADD_TO_CART":
+  //       this.ManageCart(userId, product, qty, false);
+  //       break;
+  //     case "REMOVE_FROM_CART":
+  //       this.ManageCart(userId, product, qty, true);
+  //       break;
+  //     case "CREATE_ORDER":
+  //       this.ManageOrder(userId, order);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }
 }
 
 module.exports = CustomerService;
